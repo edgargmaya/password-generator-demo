@@ -1,0 +1,139 @@
+# name: Develop Pipeline
+
+# on:
+#   push:
+#     branches:
+#       - develop
+
+# jobs:
+#   build-and-publish:
+#     uses: org/mi-collection-de-actions/mi-action@v1
+#     with:
+#       unit_tests_enabled: true
+#       integration_tests_enabled: true
+#       lint_enabled: true
+#       static_analysis_enabled: true
+#       python_version: "3.8"
+#       pypicloud_repo_url: "https://pypicloud.miempresa.com/simple"
+#     secrets:
+#       pypicloud_username: ${{ secrets.PYPICLOUD_USERNAME }}
+#       pypicloud_password: ${{ secrets.PYPICLOUD_PASSWORD }}
+
+
+
+
+
+
+
+
+
+#######################################################################################
+
+# Dado que la **lógica principal del pipeline** debe residir en otro repositorio (por ejemplo, `"org/mi-collection-de-actions/mi-action@v1"`), aquí solo “invocamos” esa acción reusable y le pasamos parámetros.
+
+# #### Ejemplo de Reusable Workflow (en otro repo)
+
+# Supongamos que en `org/mi-collection-de-actions/mi-action@v1` tienes un `action.yml` o un `build_and_publish.yaml` con la lógica siguiente (pseudocódigo simplificado):
+
+# ```yaml
+# # Repositorio: org/mi-collection-de-actions
+# # Archivo: .github/workflows/build_and_publish.yaml
+# name: Build and Publish
+
+# on:
+#   workflow_call:
+#     inputs:
+#       unit_tests_enabled:
+#         type: boolean
+#         default: true
+#       integration_tests_enabled:
+#         type: boolean
+#         default: false
+#       lint_enabled:
+#         type: boolean
+#         default: true
+#       static_analysis_enabled:
+#         type: boolean
+#         default: true
+#       python_version:
+#         type: string
+#         default: "3.8"
+#       pypicloud_repo_url:
+#         type: string
+#         required: true
+#       # etc...
+#     secrets:
+#       pypicloud_username:
+#         required: true
+#       pypicloud_password:
+#         required: true
+
+# jobs:
+#   build-and-publish:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v3
+
+#       - name: Set up Python ${{ inputs.python_version }}
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: ${{ inputs.python_version }}
+
+#       - name: Install dependencies
+#         run: |
+#           pip install --upgrade pip
+#           pip install -r requirements.txt
+
+#       - name: Determine Package Version
+#         id: version_step
+#         run: |
+#           # Verificar si existe setup.py
+#           if [ -f "setup.py" ]; then
+#             # Extraer la versión base
+#             BASE_VERSION=$(grep 'version=' setup.py | sed -E "s/.*version=['\"]([^'\"]+)['\"].*/\1/")
+#             echo "Base version found in setup.py: $BASE_VERSION"
+#           else
+#             BASE_VERSION="0.0.0"
+#             echo "No setup.py found. Using base version 0.0.0"
+#           fi
+#           FULL_VERSION="${BASE_VERSION}-${{ github.run_number }}"
+#           echo "PACKAGE_VERSION=$FULL_VERSION" >> $GITHUB_OUTPUT
+
+#       - name: Print Package Version
+#         run: echo "Package version to publish: ${{ steps.version_step.outputs.PACKAGE_VERSION }}"
+
+#       - name: Run Lint (pylint)
+#         if: ${{ inputs.lint_enabled }}
+#         run: |
+#           pylint password_generator
+
+#       - name: Run Static Analysis (Bandit)
+#         if: ${{ inputs.static_analysis_enabled }}
+#         run: |
+#           bandit -r password_generator
+
+#       - name: Run Unit Tests
+#         if: ${{ inputs.unit_tests_enabled }}
+#         run: pytest tests/unit
+
+#       - name: Run Integration Tests
+#         if: ${{ inputs.integration_tests_enabled }}
+#         run: pytest tests/integration --maxfail=1 --disable-warnings
+
+#       # Si alguno de los pasos anteriores falla, este job falla y no se ejecutan los siguientes pasos
+#       - name: Build Package
+#         run: |
+#           # Ajustar la versión en setup.py antes de build (opcional),
+#           # O puedes inyectarla en el comando de build
+#           sed -i "s/version=\"[^\"]*\"/version=\"${{ steps.version_step.outputs.PACKAGE_VERSION }}\"/" setup.py
+#           python setup.py sdist bdist_wheel
+
+#       - name: Publish to pypicloud
+#         run: |
+#           pip install twine
+#           twine upload \
+#             --repository-url ${{ inputs.pypicloud_repo_url }} \
+#             -u ${{ secrets.pypicloud_username }} \
+#             -p ${{ secrets.pypicloud_password }} \
+#             dist/*

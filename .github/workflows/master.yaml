@@ -1,0 +1,20 @@
+# name: Master Pipeline
+
+# on:
+#   push:
+#     branches:
+#       - master
+
+# jobs:
+#   build-and-publish:
+#     uses: org/mi-collection-de-actions/mi-action@v1
+#     with:
+#       unit_tests_enabled: true
+#       integration_tests_enabled: false  # quizá no hagas pruebas de integración en master
+#       lint_enabled: true
+#       static_analysis_enabled: true
+#       python_version: "3.8"
+#       pypicloud_repo_url: "https://pypicloud.miempresa.com/simple"
+#     secrets:
+#       pypicloud_username: ${{ secrets.PYPICLOUD_USERNAME }}
+#       pypicloud_password: ${{ secrets.PYPICLOUD_PASSWORD }}
