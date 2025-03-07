@@ -1,0 +1,7 @@
+pytest
+pylint
+bandit
+requests_mock
+boto3
+# Si usas localstack de forma local, podrías incluir:
+localstack
